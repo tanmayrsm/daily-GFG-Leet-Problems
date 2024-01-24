@@ -29,14 +29,14 @@ class Solution {
         if(root == null)    return;
         if(root.left == null && root.right == null){
             int oddNos = 0;
-            ct.set(root.val - 1, ct.get(root.val - 1) + 1);
+            // ct.set(root.val - 1, ct.get(root.val - 1) + 1);
             for(int x : ct) {
-                System.out.print(x + ":: ");
+                // System.out.print(x + ":: ");
                 
                 if(x % 2 == 1)  oddNos++;
             }
-                System.out.println();
-            ct.set(root.val - 1, ct.get(root.val - 1) - 1);
+                // System.out.println();
+            // ct.set(root.val - 1, ct.get(root.val - 1) - 1);
             
             if(oddNos <= 1) ans++;
             return;
