@@ -1,28 +1,62 @@
 
-class Solution
+//User function Template for Java
+class Solution // reff soln - KMP algo
 {
-    // assumption based solution
-    public int minNumber(int arr[], int N) {
-        int sum = Arrays.stream(arr).sum();
-        return findNextPrime(sum) - sum;
-    }
-    private static int findNextPrime(int sum) {
-        for(int i = sum; i < sum + 100; i++) {  // assuming the next prime no lies within range of 100 for this number, though it can be true always
-            if(isPrime(i))  return i;
+    public  void formLpsArray(int[] lps,String pattern){
+        int i=1;
+        int lMl=0;
+        while (i<pattern.length()){
+            if(pattern.charAt(i)==pattern.charAt(lMl)){
+                lMl++;
+                lps[i]=lMl;
+                
+                i++;
+                
+            } else {
+                if(lMl==0){
+                    lps[i]=0;
+                    i++;
+                } else {
+                    lMl=lps[lMl-1];
+                }
+            }
         }
-        return -1;
     }
-    private static boolean isPrime(int no) {
-        for(int i = 2; i * i <= no; i++) {
-            if(no % i == 0)  return false;
+    
+    ArrayList<Integer> search(String pattern, String text)
+    {
+        int patterLength=pattern.length();
+        int textLength=text.length();
+        ArrayList<Integer> arrayList=new ArrayList<>();
+        int[] lps=new int[patterLength];
+        lps[0]=0;
+        formLpsArray(lps,pattern);
+        int i=0;
+        int j=0;
+
+        while(i<textLength){
+            
+            if(text.charAt(i)==pattern.charAt(j)) {
+                i++;
+                j++;
+                 if (j == patterLength) {
+                    arrayList.add((i-j)+1);
+                      j=lps[j-1];
+                } 
+               
+            } else  {
+                if(j!=0){
+                    j=lps[j-1];
+                } else {
+                    i++;
+                }
+            }
+            
+            
         }
-        return true;
+        if(arrayList.size()==0){
+            arrayList.add(-1);
+        }
+        return arrayList;
     }
 }
-
-
-// 18 + x = prime no after 18
-// 1 -> p = find prime no after n
-// return p - n;
-
-// 20 - 21 - 22 - 23
