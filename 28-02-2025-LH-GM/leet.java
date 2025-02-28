@@ -1,26 +1,47 @@
 class Solution {
-    private static int n;
-    private static Map<Integer, Integer> m;
-    public int lenLongestFibSubseq(int[] arr) {
-        n = arr.length;
-        m = new HashMap<>();
-        int ans = 0;
-        
-        for(int i = 0; i < n; i++)
-            m.put(arr[i], i);
-
-        for(int i = 0; i < n; i++) {
-            for(int j = i + 1; j < n; j++) {
-                ans = Math.max(ans, solve(arr, i, j));
+    public String shortestCommonSupersequence(String s1, String s2) {
+        int n = s1.length();
+        int m = s2.length();
+        int[][] dp = new int[n + 1][m + 1];
+        for (int i = 1; i < n + 1; i++) {
+            for (int j = 1; j <= m; j++) {
+                if (s1.charAt(i-1) == s2.charAt(j-1)) {
+                    dp[i][j]= 1 + dp[i - 1][j - 1];
+                }
+                else dp[i][j] = Math.max(dp[i - 1][j],dp[i][j - 1]);
             }
         }
-        return ans == 0 ? ans : ans + 2;
-    }
+        StringBuilder sb=new StringBuilder();
+        int i=n,j=m;
+        while(i>0 && j>0){
+            char a=s1.charAt(i-1);
+            char b=s2.charAt(j-1);
+            if(a==b) {
+                sb.append(a);
+                i--;
+                j--;
+            }
+            else{
+                if(dp[i-1][j]>dp[i][j-1]){
+                    sb.append(a);
+                    i--;
+                }
+                else {
+                    sb.append(b);
+                    j--;
+                }
+            }
 
-    private static int solve(int[] arr, int currIndex1, int currIndex2) {
-        int nxt = arr[currIndex1] + arr[currIndex2];
-        int k = m.getOrDefault(nxt, -1);
-        if(k == -1) return 0;
-        return 1 + solve(arr, currIndex2, k);
+        }
+        while(i>0){
+            sb.append(s1.charAt(i-1));
+            i--;
+        }
+        while(j>0){
+            sb.append(s2.charAt(j-1));
+            j--;
+        }
+        sb.reverse();
+        return sb.toString();
     }
 }
