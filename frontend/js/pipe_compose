@@ -1,0 +1,38 @@
+// ===== pipe =====
+// Left-to-right function composition:
+// pipe(f, g, h)(x) === h(g(f(x)))
+
+const pipe =
+  (...fns) =>
+  (input) =>
+    fns.reduce((acc, fn) => fn(acc), input); // left to right[web:132][web:133]
+
+// Example:
+const double = (x) => x * 2;
+const add3 = (x) => x + 3;
+
+const doubleThenAdd3 = pipe(double, add3);
+
+console.log(doubleThenAdd3(5)); // (5 * 2) + 3 = 13
+
+
+// ===== compose =====
+// Right-to-left composition:
+// compose(f, g, h)(x) === f(g(h(x)))
+
+const compose =
+  (...fns) =>
+  (input) =>
+    fns.reduceRight((acc, fn) => fn(acc), input); // right to left[web:132][web:138]
+
+// Example:
+const minus1 = (x) => x - 1;
+
+const doubleThenAdd3ThenMinus1 = compose(minus1, add3, double);
+// compose(minus1, add3, double)(5)
+// = minus1(add3(double(5)))
+// = minus1(add3(10))
+// = minus1(13)
+// = 12
+
+console.log(doubleThenAdd3ThenMinus1(5)); // 12
