@@ -100,3 +100,22 @@ GET /hotels/_search
 - Move to ES when:
   - Many hotels, many languages.
   - Need heavy relevance tuning, typo tolerance, synonyms.[web:55][web:58]
+
+---
+
+## 6. `geo_point` in Elasticsearch
+
+### What it is
+
+- A field type that stores one **latitude + longitude** pair.
+- Example: `"location": { "lat": 13.0827, "lon": 80.2707 }`.
+
+### Why it's useful
+
+- **Distance queries**: "friends within 2km of me".
+- **Area queries**: "users inside this city polygon".
+- **Sort by distance**: nearest first.
+- **Score by distance**: closer = higher rank.
+- **Map aggregations**: cluster points into tiles/buckets for map views.
+
+Using `geo_point` means Elasticsearch handles spatial indexing + math efficiently instead of you doing manual lat/lon calculations.

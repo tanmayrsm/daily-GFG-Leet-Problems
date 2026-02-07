@@ -1,5 +1,24 @@
 # PostgreSQL – quick notes for Agoda-style booking
 
+## TOPICS -
+1. Multi index
+2. tsrange (timestamp range)
+3. gIST
+4. GIN
+
+## Quick Definitions
+
+- **tsrange**: Range type for timestamps. `tsrange('2026-01-01', '2026-01-05')` stores an interval; use `&&` to check overlaps (e.g., booking conflicts).
+  - *Under the hood*: Stores two timestamps (lower, upper) + boundary flags `[)` or `[]`. Operators like `&&` (overlap) compare bounds directly: `r1.lower < r2.upper AND r1.upper > r2.lower`. No special index needed—just efficient comparison logic.
+
+- **GiST (Generalized Search Tree)**: Index for complex data (ranges, geometry). Enables exclusion constraints like "prevent overlapping bookings for same room".
+  - *Under the hood*: Balanced tree where internal nodes store predicates/bounding boxes (e.g., for ranges: "this subtree contains ranges between [min, max]"). Query descends tree, pruning branches that can't match. Leaf nodes point to heap rows. Can be lossy—might return false positives that get rechecked.
+
+- **GIN (Generalized Inverted Index)**: Index for multi-value data (arrays, full-text). Fast for `ILIKE '%search%'` and similarity matching on text fields.
+  - *Under the hood*: Breaks values into keys (e.g., trigrams for text: "marriott" → "mar", "arr", "rri", "rio"...). Each key maps to posting list (sorted row IDs). Query intersects/merges posting lists. Example: search "mar" → fetch posting list for "mar", return matching rows.
+
+---
+
 ## 1. Multiple indexes on a table
 
 - One primary key (e.g., `booking_id`), many secondary indexes.
