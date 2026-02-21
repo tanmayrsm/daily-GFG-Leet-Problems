@@ -167,3 +167,139 @@ You can summarize like this:
   > "For hot rows, like a flash promo with very small remaining quota or the last room in a hotel, I use pessimistic locking via `SELECT ... FOR UPDATE`. That locks the row so only one transaction can decrement quota or reserve at a time; others wait or are rejected. For job queues I'd use `FOR UPDATE SKIP LOCKED` so workers claim different rows without blocking."
 
 Key idea: optimistic = **detect and retry**, pessimistic = **lock and serialize**.
+
+---
+
+## 6. Promo Service: Optimistic vs Pessimistic (Practical Guide)
+
+### Overall stance
+
+- Promo/discount service is **mostly optimistic**.
+- Use **pessimistic / atomic counters** only on a few true hotspots (limited-use promos).
+
+---
+
+### Where to use optimistic locking
+
+Use a `version` column and `UPDATE ... WHERE version = ?`:
+
+**User-promo usage**
+- "Has this user already used PROMO_X?"
+- Update row with `version` check; if rows affected = 0 → someone else changed it.
+
+```sql
+UPDATE user_promo_usage
+SET used = true, version = version + 1
+WHERE user_id = :user_id
+  AND promo_id = :promo_id
+  AND version = :current_version
+  AND used = false;
+```
+
+**Promo config (rules, validity)**
+- Marketing edits promo rules rarely, so optimistic versioning avoids overwrites.
+
+```sql
+UPDATE promo
+SET discount_percent = :new_discount,
+    version = version + 1
+WHERE promo_id = :promo_id
+  AND version = :current_version;
+```
+
+**Per-booking promo application**
+- Store a `version` or promo snapshot on booking; verify on commit to avoid applying outdated rules.
+
+Conflicts are rare → optimistic is cheap and scales.
+
+---
+
+### Where to use pessimistic / atomic
+
+For Agoda-style **limited inventory promos**:
+
+- Example: "First 100 bookings get 80% off."
+
+Use **atomic counter** on a promo inventory row:
+
+```sql
+UPDATE promo_inventory
+SET remaining = remaining - 1
+WHERE promo_id = :promo_id
+  AND remaining > 0;
+```
+
+- If affected rows = 1 → you got a slot.
+- If 0 → sold out.
+
+If you must read more state then update, you might wrap that row with `SELECT ... FOR UPDATE` (pessimistic) in a short transaction:
+
+```sql
+BEGIN;
+
+SELECT remaining
+FROM promo_inventory
+WHERE promo_id = :promo_id
+FOR UPDATE;
+
+-- Check conditions, then:
+
+UPDATE promo_inventory
+SET remaining = remaining - 1
+WHERE promo_id = :promo_id;
+
+COMMIT;
+```
+
+---
+
+### Idempotency around the APIs
+
+**Apply promo API**
+- Client sends `Idempotency-Key`.
+- Server:
+  - If key seen → return same result.
+  - Else:
+    - Run DB logic (optimistic/pessimistic as above).
+    - Store result keyed by the idempotency key.
+
+```java
+public PromoApplyResult applyPromo(String userId, String promoId, String idempotencyKey) {
+    // Check idempotency store (Redis)
+    PromoApplyResult cached = redis.get("promo:apply:" + idempotencyKey);
+    if (cached != null) {
+        return cached; // Already processed
+    }
+
+    // Process with appropriate locking
+    PromoApplyResult result = processPromoApplication(userId, promoId);
+
+    // Store result
+    redis.setex("promo:apply:" + idempotencyKey, 86400, result);
+
+    return result;
+}
+```
+
+**Issue promo / coupons**
+- Use idempotent issue calls so retries don't create duplicate coupons.
+
+Idempotency = protects against **retries**.
+Locking (optimistic/pessimistic) = protects against **concurrent writes**.
+
+---
+
+### Agoda-style mapping (Summary)
+
+| Use Case | Strategy | Reason |
+|----------|----------|--------|
+| Promo definitions | Optimistic | Rare updates, version conflicts easy to handle |
+| User-usage tracking | Optimistic | Low contention per user |
+| Booking promo application | Optimistic | Different bookings, low conflict |
+| Limited-count inventory ("only 100 uses") | Atomic/Pessimistic | High contention, atomic decrement required |
+| All write APIs | Idempotent | Protect against retries |
+
+**Decision tree:**
+- Low contention + cheap retry? → **Optimistic**
+- High contention + expensive retry? → **Pessimistic**
+- API level? → Always **Idempotent**

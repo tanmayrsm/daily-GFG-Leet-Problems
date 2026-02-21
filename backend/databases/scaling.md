@@ -196,3 +196,115 @@ Key points:
 - No "big bang"; run old and new in parallel for a while.
 - Migration jobs are idempotent (safe to retry).
 - Routing logic is explicit and feature-flagged so you can roll back if needed.
+
+---
+
+## 6. Handling Hot DB Shards Under High Traffic
+
+### Detecting Hot Shards (Monitoring)
+
+Track these **per shard / DB node**:
+
+- CPU %, RAM, disk I/O, network.
+- QPS (reads/writes), active connections.
+- Query latency (P95/P99) and error rates (timeouts, deadlocks).
+- Replication lag (if using replicas).
+
+How to use it:
+
+- Dashboards grouped by `shard_id / instance`.
+- Alerts when:
+  - CPU > X% for Y minutes,
+  - P95 latency > threshold,
+  - One shard's QPS or CPU is much higher than others.
+
+---
+
+### Immediate Mitigation When a Shard Is Hot
+
+#### Step 1: Fix the biggest queries
+
+- Look at slow-query / top-query views:
+  - pg_stat_statements, slow logs, AWR, vendor tools, etc.
+- Target:
+  - Full table scans, missing indexes.
+  - N+1 patterns, huge `IN` lists.
+- Quick fixes:
+  - Add/adjust indexes on hot columns.
+  - Simplify queries, reduce selected columns, paginate.
+
+This alone often drops load massively.
+
+---
+
+#### Step 2: Offload reads
+
+- Add **read replicas** for that shard.
+- Route:
+  - Strongly consistent writes → primary.
+  - Most reads / analytics / reports → replicas.
+
+Plus:
+
+- Add **caching** (Redis / app cache):
+  - Cache hot rows / query results with short TTL.
+  - Use cache-aside: app checks cache, falls back to DB on miss.
+
+Goal: shrink read QPS hitting the hot shard.
+
+---
+
+#### Step 3: Tame writes
+
+If writes are the problem:
+
+- Batch writes where possible (e.g., bulk inserts, periodic flush).
+- Move non-critical writes to async queues (Kafka, SQS, etc.).
+- Drop unnecessary per-request writes (debug logs, counters) from the main DB.
+
+---
+
+#### Step 4: Scale the shard
+
+Short term:
+
+- Scale **vertically**: bigger instance (CPU/RAM/IOPS).
+
+Long term:
+
+- Scale **horizontally**:
+  - Add more shards and move some data off the hot shard.
+  - Example: if shard keyed by `user_id mod 4` and shard 0 is hot, go to mod 8 and migrate some users from 0 → 4.
+- Use consistent hashing / routing to keep key → shard mapping stable during/after migration (but not per-request CPU based hopping).
+
+---
+
+### Ongoing Practices to Avoid Hot Shards
+
+- **Good shard key**:
+  - Avoid shard key that causes all hot users/tenants on the same shard (e.g., `country_id` if one country is 90% traffic).
+  - Prefer high-cardinality, well-distributed keys (like user ID).
+
+- **Rate limiting & backpressure**:
+  - Per-tenant / per-endpoint rate limits so one noisy client doesn't burn a shard.
+  - Queue overflow protection on write paths.
+
+- **Regular review of top queries**:
+  - Weekly slow-query / hot query review.
+  - Use real traffic to guide indexing and schema changes.
+
+---
+
+### What *Not* to Do
+
+- Don't send a key's traffic to a **different shard** just because current shard is busy:
+  - That breaks data locality and consistency.
+  - Use consistent hashing for **static partitioning**, not dynamic CPU-based routing.
+
+Focus instead on:
+
+1. Monitoring and alerting.
+2. Query/index fixes.
+3. Caching + read replicas.
+4. Write smoothing.
+5. Planned resharding when needed.
