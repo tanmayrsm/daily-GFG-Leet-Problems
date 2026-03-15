@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 
-export function useDebouncedValue<T>(value: T, delay = 300): T {
+function useDebounce(value, delay) {
   const [debounced, setDebounced] = useState(value);
 
   useEffect(() => {
@@ -11,8 +11,4 @@ export function useDebouncedValue<T>(value: T, delay = 300): T {
   return debounced;
 }
 
-
-
-// usage
-const [query, setQuery] = useState("");
-const debouncedQuery = useDebouncedValue(query, 400);
+export default useDebounce;

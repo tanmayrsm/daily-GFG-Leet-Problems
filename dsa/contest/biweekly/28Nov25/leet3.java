@@ -1,21 +1,35 @@
 class Solution {
-    public long minOperations(int[] nums1, int[] nums2) {
-        int n = nums1.length;
-        long ans = 0;
-        int extra = nums2[n], minOps = Integer.MAX_VALUE;
-        for (int i = 0; i < n; i++) {
-            int min = Math.min(nums1[i], nums2[i]), max = Math.max(nums1[i], nums2[i]);
-            long ops = max - min;
-            ans += ops;
-            if(extra >= min && extra <= max) {
-                minOps = 1;
-            } else if (extra < min) {
-                minOps = Math.min(minOps, 1 + min - extra);
-            } else if (extra > max) {
-                minOps = Math.min(minOps, 1 + extra - max);
+    public int longestSubarray(int[] nums) {
+        int n = nums.length, ans = 0;
+        int[] pref = new int[n];
+        int[] suff = new int[n];
+        pref[0] = 1; suff[n - 1] = 1;
+        for(int i = 1; i < n; i++) {
+            pref[i] = 1;
+            if(nums[i] >= nums[i - 1])
+                pref[i] += pref[i - 1];
+        }
+        for(int i = n - 2; i >= 0; i--) {
+            suff[i] = 1;
+            if(nums[i] <= nums[i + 1])
+                suff[i] += suff[i + 1];
+        }
+        ans = Math.max(pref[0], suff[0]);
+        for(int i = 1; i < n; i++) {
+            ans = Math.max(pref[i], suff[i]);
+            if(nums[i] < nums[i - 1]) { // conflict
+                // 1- change nums[i - 1]
+                if(i - 2 >= 0 && nums[i - 2] == nums[i]) {
+                    ans = Math.max(ans, pref[i - 1] + suff[i]);
+                } else
+                    ans = Math.max(ans, 1 + suff[i]);
+                // 2- change nums[i]
+                if(i + 1 < n && nums[i + 1] == nums[i - 1]) {
+                    ans = Math.max(ans, pref[i - 1] + suff[i]);
+                } else
+                    ans = Math.max(ans, 1 + pref[i - 1]);
             }
         }
-        // System.out.println(ans + "::" + minOps);
-        return ans + minOps;
+        return ans;
     }
 }

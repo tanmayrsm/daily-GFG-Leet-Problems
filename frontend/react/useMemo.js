@@ -1,17 +1,20 @@
-// 1) Expensive calculation derived from state
-// You have a large list and a heavy filter/sort; every keystroke re-renders and runs that heavy work.
+import { useMemo } from "react";
 
-function UserList({ users, search }) {
-  const filteredUsers = React.useMemo(() => {
-    // assume this is heavy: complex filter + sort
-    return users
-      .filter(u => u.name.toLowerCase().includes(search.toLowerCase()))
-      .sort((a, b) => a.name.localeCompare(b.name));
-  }, [users, search]);
+// useMemo - memoize computed values
+// Purpose: avoid recomputing expensive derived values
+// (sorting, filtering, heavy calculations) unless dependencies change.
+function UserList({ items }) {
+  const sorted = useMemo(() => {
+    return items.slice().sort((a, b) => a.value - b.value);
+  }, [items]);
 
   return (
     <ul>
-      {filteredUsers.map(u => <li key={u.id}>{u.name}</li>)}
+      {sorted.map((item) => (
+        <li key={item.id}>{item.value}</li>
+      ))}
     </ul>
   );
 }
+
+export default UserList;
