@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.tanmayrsm.dlyprb.autopush.test</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/sh</string>
+    <string>-lc</string>
+    <string>/usr/bin/osascript -e 'tell application "Terminal" to do script "STATE_DIR=/Users/tamishra/.local/state/dlyprb-autopush-test RUN_WINDOW_HOUR=12 /Users/tamishra/Documents/dlyPrb/scripts/auto-push-dlyprb.sh &gt;&gt; /tmp/dlyprb-autopush.test.out.log 2&gt;&gt; /tmp/dlyprb-autopush.test.err.log"' ; launchctl bootout gui/$(id -u) /Users/tamishra/Library/LaunchAgents/com.tanmayrsm.dlyprb.autopush.test.plist &gt;/dev/null 2&gt;&amp;1 || true</string>
+  </array>
+
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Month</key>
+    <integer>3</integer>
+    <key>Day</key>
+    <integer>25</integer>
+    <key>Hour</key>
+    <integer>12</integer>
+    <key>Minute</key>
+    <integer>13</integer>
+  </dict>
+
+  <key>StandardOutPath</key>
+  <string>/tmp/dlyprb-autopush.test.agent.out.log</string>
+
+  <key>StandardErrorPath</key>
+  <string>/tmp/dlyprb-autopush.test.agent.err.log</string>
+</dict>
+</plist>

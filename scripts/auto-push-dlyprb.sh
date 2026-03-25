@@ -50,7 +50,7 @@ if [ ! -d "$REPO_DIR/.git" ]; then
   log "Git repo not found at $REPO_DIR."
   exit 1
 fi
-
+ 
 cd "$REPO_DIR"
 
 if [ -f .git/MERGE_HEAD ] || [ -d .git/rebase-merge ] || [ -d .git/rebase-apply ] || [ -f .git/CHERRY_PICK_HEAD ]; then
