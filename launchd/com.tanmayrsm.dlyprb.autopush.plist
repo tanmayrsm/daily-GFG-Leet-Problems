@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.tanmayrsm.dlyprb.autopush</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/sh</string>
+    <string>-lc</string>
+    <string>IST_DATE="$(TZ=Asia/Kolkata date '+%Y-%m-%d')"; IST_HOUR="$(TZ=Asia/Kolkata date '+%H')"; STAMP_FILE="/Users/tamishra/.local/state/dlyPrb-autopush/last_run_ist_date"; if [ "$IST_HOUR" != "12" ]; then exit 0; fi; if [ -f "$STAMP_FILE" ] &amp;&amp; [ "$(cat "$STAMP_FILE")" = "$IST_DATE" ]; then exit 0; fi; /usr/bin/osascript -e 'tell application "Terminal" to do script "/Users/tamishra/Documents/dlyPrb/scripts/auto-push-dlyprb.sh &gt;&gt; /tmp/dlyprb-autopush.out.log 2&gt;&gt; /tmp/dlyprb-autopush.err.log"'</string>
+  </array>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>REPO_DIR</key>
+    <string>/Users/tamishra/Documents/dlyPrb</string>
+    <key>BRANCH</key>
+    <string>main</string>
+    <key>GITHUB_USERNAME</key>
+    <string>tanmayrsm</string>
+    <key>GITHUB_TOKEN_FILE</key>
+    <string>/Users/tamishra/.config/dlyPrb/github_token</string>
+    <key>IST_TZ</key>
+    <string>Asia/Kolkata</string>
+    <key>RUN_WINDOW_HOUR</key>
+    <string>12</string>
+    <key>STATE_DIR</key>
+    <string>/Users/tamishra/.local/state/dlyPrb-autopush</string>
+  </dict>
+
+  <key>StartInterval</key>
+  <integer>1800</integer>
+
+  <key>RunAtLoad</key>
+  <true/>
+
+  <key>StandardOutPath</key>
+  <string>/tmp/dlyprb-autopush.out.log</string>
+
+  <key>StandardErrorPath</key>
+  <string>/tmp/dlyprb-autopush.err.log</string>
+</dict>
+</plist>
