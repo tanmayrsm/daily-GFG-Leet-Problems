@@ -5,10 +5,10 @@ set -eu
 REPO_DIR="${REPO_DIR:-/Users/tamishra/Documents/dlyPrb}"
 BRANCH="${BRANCH:-main}"
 IST_TZ="${IST_TZ:-Asia/Kolkata}"
-RUN_WINDOW_HOUR="${RUN_WINDOW_HOUR:-12}"
+RUN_WINDOW_HOURS="${RUN_WINDOW_HOURS:-${RUN_WINDOW_HOUR:-12}}"
 TOKEN_FILE="${GITHUB_TOKEN_FILE:-$HOME/.config/dlyPrb/github_token}"
 STATE_DIR="${STATE_DIR:-$HOME/.local/state/dlyPrb-autopush}"
-STAMP_FILE="$STATE_DIR/last_run_ist_date"
+STAMP_FILE="$STATE_DIR/last_run_ist_slot"
 LOCK_DIR="${LOCK_DIR:-/tmp/dlyprb-autopush.lock}"
 PATH="/usr/bin:/bin:/usr/sbin:/sbin:/opt/homebrew/bin:/usr/local/bin"
 
@@ -30,14 +30,24 @@ mkdir -p "$STATE_DIR"
 
 current_ist_date="$(TZ="$IST_TZ" date '+%Y-%m-%d')"
 current_ist_hour="$(TZ="$IST_TZ" date '+%H')"
+current_ist_slot="${current_ist_date}-${current_ist_hour}"
+normalized_run_hours="$(printf '%s' "$RUN_WINDOW_HOURS" | tr ',' ' ')"
+within_run_window=0
 
-if [ "$current_ist_hour" != "$(printf '%02d' "$RUN_WINDOW_HOUR")" ]; then
+for run_hour in $normalized_run_hours; do
+  if [ "$current_ist_hour" = "$(printf '%02d' "$run_hour")" ]; then
+    within_run_window=1
+    break
+  fi
+done
+
+if [ "$within_run_window" -ne 1 ]; then
   log "Outside IST push window; current IST hour is $current_ist_hour."
   exit 0
 fi
 
-if [ -f "$STAMP_FILE" ] && [ "$(cat "$STAMP_FILE")" = "$current_ist_date" ]; then
-  log "Push already attempted for $current_ist_date IST."
+if [ -f "$STAMP_FILE" ] && [ "$(cat "$STAMP_FILE")" = "$current_ist_slot" ]; then
+  log "Push already attempted for $current_ist_slot IST."
   exit 0
 fi
 
@@ -78,5 +88,5 @@ export GIT_TERMINAL_PROMPT=0
 
 git -c credential.helper= -c core.askPass="$REPO_DIR/scripts/github-askpass.sh" push origin "$BRANCH"
 
-printf '%s\n' "$current_ist_date" > "$STAMP_FILE"
+printf '%s\n' "$current_ist_slot" > "$STAMP_FILE"
 log "Auto-push completed successfully."
