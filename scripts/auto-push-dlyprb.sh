@@ -70,12 +70,13 @@ fi
 
 git checkout "$BRANCH"
 
-git add -A
+# Stage everything except Finder metadata noise.
+git add -A -- . ':(exclude).DS_Store' ':(exclude)**/.DS_Store'
 
 if ! git diff --cached --quiet; then
   git commit -m "chore: daily auto-push $(TZ="$IST_TZ" date '+%Y-%m-%d %H:%M IST')"
 else
-  log "No local file changes to commit."
+  log "No substantive local file changes to commit."
 fi
 
 if ! git rev-list --left-right --count "origin/$BRANCH...$BRANCH" >/dev/null 2>&1; then

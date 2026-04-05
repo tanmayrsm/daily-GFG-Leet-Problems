@@ -9,7 +9,7 @@
   <array>
     <string>/bin/sh</string>
     <string>-lc</string>
-    <string>/usr/bin/osascript -e 'tell application "Terminal" to do script "STATE_DIR=/Users/tamishra/.local/state/dlyprb-autopush-test RUN_WINDOW_HOURS=12 /Users/tamishra/Documents/dlyPrb/scripts/auto-push-dlyprb.sh &gt;&gt; /tmp/dlyprb-autopush.test.out.log 2&gt;&gt; /tmp/dlyprb-autopush.test.err.log"' ; launchctl bootout gui/$(id -u) /Users/tamishra/Library/LaunchAgents/com.tanmayrsm.dlyprb.autopush.test.plist &gt;/dev/null 2&gt;&amp;1 || true</string>
+    <string>/usr/bin/osascript -e 'tell application "Terminal" to do script "REPO_DIR=/Users/tamishra/Documents/dlyPrb BRANCH=main GITHUB_USERNAME=tanmayrsm GITHUB_TOKEN_FILE=/Users/tamishra/.config/dlyPrb/github_token IST_TZ=Asia/Kolkata RUN_WINDOW_HOURS=12 STATE_DIR=/Users/tamishra/.local/state/dlyprb-autopush-test /Users/tamishra/Documents/dlyPrb/scripts/auto-push-dlyprb.sh &gt;&gt; /tmp/dlyprb-autopush.test.out.log 2&gt;&gt; /tmp/dlyprb-autopush.test.err.log; exit"' ; launchctl bootout gui/$(id -u) /Users/tamishra/Library/LaunchAgents/com.tanmayrsm.dlyprb.autopush.test.plist &gt;/dev/null 2&gt;&amp;1 || true</string>
   </array>
 
   <key>StartCalendarInterval</key>

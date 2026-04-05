@@ -9,7 +9,7 @@
   <array>
     <string>/bin/sh</string>
     <string>-lc</string>
-    <string>/usr/bin/osascript -e 'tell application "Terminal" to do script "/Users/tamishra/Documents/dlyPrb/scripts/auto-push-dlyprb.sh &gt;&gt; /tmp/dlyprb-autopush.out.log 2&gt;&gt; /tmp/dlyprb-autopush.err.log"'</string>
+    <string>/usr/bin/osascript -e 'tell application "Terminal" to do script "REPO_DIR=/Users/tamishra/Documents/dlyPrb BRANCH=main GITHUB_USERNAME=tanmayrsm GITHUB_TOKEN_FILE=/Users/tamishra/.config/dlyPrb/github_token IST_TZ=Asia/Kolkata RUN_WINDOW_HOURS=10,12 STATE_DIR=/Users/tamishra/.local/state/dlyPrb-autopush /Users/tamishra/Documents/dlyPrb/scripts/auto-push-dlyprb.sh &gt;&gt; /tmp/dlyprb-autopush.out.log 2&gt;&gt; /tmp/dlyprb-autopush.err.log; exit"'</string>
   </array>
 
   <key>EnvironmentVariables</key>
@@ -30,11 +30,21 @@
     <string>/Users/tamishra/.local/state/dlyPrb-autopush</string>
   </dict>
 
-  <key>StartInterval</key>
-  <integer>1800</integer>
-
-  <key>RunAtLoad</key>
-  <true/>
+  <key>StartCalendarInterval</key>
+  <array>
+    <dict>
+      <key>Hour</key>
+      <integer>10</integer>
+      <key>Minute</key>
+      <integer>0</integer>
+    </dict>
+    <dict>
+      <key>Hour</key>
+      <integer>12</integer>
+      <key>Minute</key>
+      <integer>0</integer>
+    </dict>
+  </array>
 
   <key>StandardOutPath</key>
   <string>/tmp/dlyprb-autopush.out.log</string>
