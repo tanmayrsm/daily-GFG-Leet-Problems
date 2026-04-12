@@ -1,29 +1,39 @@
 class Solution {
-    public int minimumDistance(int[] nums) {
-        Map<Integer, Integer[]> mp = new HashMap<>();
-        int ans = Integer.MAX_VALUE;
-        for(int i = 0; i < nums.length; i++) {
-            int curr = nums[i];
-            if(!mp.containsKey(curr)) {
-                mp.put(curr, new Integer[] {i, -1, -1});
-            } else {
-                Integer[] val = mp.get(curr);
-                if(val[1] == -1)    val[1] = i;
-                else  {
-                    if(val[2] == -1)
-                        val[2] = i;
-                    else {
-                        val[0] = val[1];
-                        val[1] = val[2];
-                        val[2] = i;
-                    }
-                    ans = Math.min(ans, calc(val));
-                }
-            }
-        }
-        return (ans == Integer.MAX_VALUE) ? -1 : ans;
+    int[][][] dp;
+
+    int dist(int a, int b){
+        if(a == 26 || b == 26) return 0;
+
+        int r1 = a / 6, c1 = a % 6;
+        int r2 = b / 6, c2 = b % 6;
+
+        return Math.abs(r1-r2) + Math.abs(c1-c2);
     }
-    private int calc(Integer[] val) {
-        return val[1] - val[0] + val[2] - val[1] + val[2] - val[0];
+
+    int solve(int i, int f1, int f2, String word){
+        if(i == word.length()) return 0;
+
+        if(dp[i][f1][f2] != -1)
+            return dp[i][f1][f2];
+
+        int cur = word.charAt(i) - 'A';
+
+        int move1 = dist(f1, cur) +
+                solve(i+1, cur, f2, word);
+
+        int move2 = dist(f2, cur) +
+                solve(i+1, f1, cur, word);
+
+        return dp[i][f1][f2] = Math.min(move1, move2);
+    }
+
+    public int minimumDistance(String word) {
+        dp = new int[301][27][27];
+
+        for(int i=0;i<301;i++)
+            for(int j=0;j<27;j++)
+                Arrays.fill(dp[i][j], -1);
+
+        return solve(0, 26, 26, word);
     }
 }
