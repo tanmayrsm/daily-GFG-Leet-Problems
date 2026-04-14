@@ -1,41 +1,77 @@
-/*
-    class Node{
-        int val;
-        ArrayList<Node> neighbors;
-        public Node(){
-            val = 0;
-            neighbors = new ArrayList<>();
-        }
-
-        public Node(int val){
-            this.val = val;
-            neighbors = new ArrayList<>();
-        }
-
-        public Node(int val, ArrayList<Node> neighbors){
-            this.val = val;
-            this.neighbors = neighbors;
-        }
-    }
-*/
 class Solution {
-    Set<Node> vis;
-    Node cloneGraph(Node node) {
-        // code here
-        vis = new HashSet<>();
-        Node ans = new Node(node.val);
-        dfs(node, ans);
-        return ans;
-    }
-    private void dfs(Node node, Node nwr) {
-        if (vis.contains(node)) return;
-        vis.add(node);
-        for(Node neigh : node.neighbors) {
-            if (!vis.contains(neigh)) {
-                Node newer = new Node(neigh.val);
-                nwr.neighbors.add(newer);
-                dfs(neigh, newer);
+    static int[] nextPalindrome(int[] num) {
+
+        int n=num.length;
+
+        boolean allNine=true;
+
+        for(int d:num)
+
+            if(d!=9){
+
+                allNine=false;
+
+                break;
+
             }
+
+        if(allNine){
+
+            int[]ans=new int[n+1];
+
+            ans[0]=1;
+
+            ans[n]=1;
+
+            return ans;
+
         }
+
+        int[]ans=Arrays.copyOf(num,n);
+
+        int mid=n/2;
+
+        for(int i=0;i<mid;i++)
+
+            ans[n-i-1]=ans[i];
+
+        if(isSmallerOrEqual(ans,num)){
+
+            int i=(n%2==0)?mid-1:mid;
+
+            int carry=1;
+
+            while(i>=0&&carry>0){
+
+                ans[i]+=carry;
+
+                carry=ans[i]/10;
+
+                ans[i]%=10;
+
+                ans[n-1-i]=ans[i];
+
+                i--;
+
+            }
+
+        }
+
+        return ans;
+
+    }
+
+    private static boolean isSmallerOrEqual(int[]a,int[]b){
+
+        for(int i=0;i<a.length;i++){
+
+            if(a[i]<b[i]) return true;
+
+            if(a[i]>b[i]) return false;
+
+        }
+
+        return true;
+
     }
 }
