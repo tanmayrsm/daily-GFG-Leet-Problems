@@ -1,64 +1,54 @@
 class Solution {
-    public int calculate(String s) {
-        int n = s.length(), r = 0;
-        String ans = "";
-        Stack<String> st = new Stack<>();
-        while (r < n) {
-            char curr = s.charAt(r);
-            if (Character.isDigit(r)) {
-                StringBuilder sb = new StringBuilder();
-                while(r < n && Character.isDigit(r)) {
-                    curr = s.charAt(r++);
-                    sb.append(curr + "");
+    public String alienOrder(String[] words) {
+        int n = words.length;
+        if(n == 1)  return words[0];
+        int[] inorder = new int[26];
+        List<Set<Integer>> adj = new ArrayList<>();
+        Queue<Integer> q = new LinkedList<>();
+        StringBuilder sb = new StringBuilder();
+        
+        for(int i = 0; i <26; i++)  adj.add(new HashSet<>());
+        Arrays.fill(inorder, -1);
+        
+        for(int i = 1; i < n; i++) {
+            int l1 = words[i - 1].length(), l2 = words[i].length(), x = 0, y = 0;
+            while (x < l1 && y < l2 && words[i - 1].charAt(x) == words[i].charAt(y)) {
+                x++;
+                y++;
+                if(x > 1)
+                    addEdge(adj, words[i - 1].charAt(x - 1), words[i - 1].charAt(x), inorder);
+                if(y > 1)
+                    addEdge(adj, words[i].charAt(y - 1), words[i].charAt(y), inorder);
+            }
+            if(x == l1 && y < l2) return "";  // invalid palindrome
+            else if (x < l1 && y < l2) 
+                addEdge(adj, words[i - 1].charAt(x), words[i].charAt(y), inorder);
+        }
+        
+        for(int i = 0; i < inorder.length; i++) {
+            if(inorder[i] == 0)    q.offer(i);
+        }
+        while(!q.isEmpty()) {
+            int n = q.size();
+            while (n-- > 0) {
+                int ch = q.poll();
+                for(Integer ch : adj.get(ch)) {
+                    inorder[ch]--;
+                    if(inorder[ch] == 0)
+                        q.offer(ch);
                 }
-                // check pt
-                char nextOperator = (r < n) ? s.charAt(r) : '#';
-                if (!st.isEmpty()) {
-                    char prevOperator = st.peek().charAt(0);
-                    if (prevOperator == '/') {
-                        resolve(st, sb.toString());
-                    } else if (nextOperator == '/') {
-                        st.push(sb.toString());
-                    } else if (prevOperator == '*') {
-                        resolve(st, sb.toString());
-                    } else resolve(st, sb.toString());
-                } else st.push(sb.toString());
-            } else if (curr == ' ') {
-                r++;
-            } else {
-                st.push(curr + "");
-                r++;
+                sb.append((ch + 'a') + "");
             }
         }
-        
-        while(!st.isEmpty()) {
-            ans = resolve(st, st.poll());
-        }
-        return Integer.parseInt(ans);
+        for(int x : inorder)
+            if(x > 0)   return "";
+        return sb.toString();
     }
-    private String resolve(Stack<String> st, String nextNo) {
-        if (st.isEmpty())   return "";
-        String operator = st.poll();
-        if (st.isEmpty())   return operator;
-        
-        String firstNo = st.poll();
-        int first = Integer.parseInt(firstNo), sec = Integer.parseInt(nextNo);
-        char ope = operator.charAt(0);
-        if (ope == '/') st.push(String.valueOf(first / sec));
-        else if (ope == '*') st.push(String.valueOf(first * sec));
-        else if (ope == '-') st.push(String.valueOf(first - sec));
-        else st.push(String.valueOf(first + sec));
-        
+    private void addEdge(List<Set<Integer>> adj, char from, char to, int[] inorder) {
+        int F = from - 'a', T = to - 'a';
+        adj.get(F).add(T);
+        if(inorder[F] == -1)    inorder[F] = 0;
+        if(inorder[T] == -1)   inorder[T] = 0;
+        inorder[T]++;
     }
 }
-
-IF TOS == /
-    doOpr
-IF NEXT == /
-    push
-IF TOS == * and next dont exist || next == +, -, *
-    doOpr
-IF NEXT == *
-    push
-ELSE doOpr
-    
