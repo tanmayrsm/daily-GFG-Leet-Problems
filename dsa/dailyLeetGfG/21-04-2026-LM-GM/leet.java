@@ -1,38 +1,54 @@
 class Solution {
-    public int numberOfArrays(int[] differences, int lower, int upper) {
-        int n = differences.length;
-
-
-        long min = 0, max = 0, sum = 0;
-
-        for (int i = 0; i < n; i++) {
-            sum += differences[i];
-            min = Math.min(min, sum);
-            max = Math.max(max, sum);
+    boolean[] vis;
+    public int minimumHammingDistance(int[] source, int[] target, int[][] allowedSwaps) {
+        List<List<Integer>> adj = new ArrayList<>();
+        int n = source.length, ans = 0;
+        vis = new boolean[n];
+        for(int i = 0; i < n; i++)
+            adj.add(new ArrayList<>());
+        for(int[] x: allowedSwaps) {
+            int from = x[0], to = x[1];
+            adj.get(from).add(to);
+            adj.get(to).add(from);
         }
+        for(int i = 0; i < n; i++) {
+            if(!vis[i]) {
+                ans += dfs(i, adj, n, source, target);
+            }
+        }
+        return ans;
+    }
+    private int dfs(int node, List<List<Integer>> adj, int n, int[] src, int[] tgt) {
+        Map<Integer, Integer> s = new HashMap<>();
+        Map<Integer, Integer> t = new HashMap<>();
+        int ans = 0;
+        vis[node] = true;
+        solve(adj, node, s, t, n, src, tgt);
+        for (Map.Entry<Integer, Integer> x : s.entrySet()) {
+            int k = x.getKey(), v = x.getValue();
+            if (t.containsKey(k)) {
+                int tv = t.get(k);
+                int reduce = Math.min(tv, v);
+                t.put(k, tv - reduce);
+            }
+        }
+        for (Map.Entry<Integer, Integer> x : t.entrySet()) {
+            ans += x.getValue();
+        }
+        return ans;
+    }
 
-        int ans = (int)((upper - lower) - (max - min) + 1);
-        return Math.max(0, ans);
+    private void solve(List<List<Integer>> adj, int curr, Map<Integer, Integer> s, Map<Integer, Integer> t, int n,
+                       int[] src, int[] tgt) {
+
+        s.put(src[curr], s.getOrDefault(src[curr], 0) + 1);
+        t.put(tgt[curr], t.getOrDefault(tgt[curr], 0) + 1);
+
+        for(Integer ch : adj.get(curr)) {
+            if(!vis[ch]) {
+                vis[ch] = true;
+                solve(adj, ch, s,t,n, src, tgt);
+            }
+        }
     }
 }
-
-// proof of my logic ->
-// 1, -3, 4
-// x, x + 1, x - 2, x + 2
-// min -> x - 2 = 1
-// max -> x + 2 = 6
-// x -> 3
-// x -> 4
-
-// 3, -4, 5, 1, -2
-// x, x + 3, x - 1, x + 4, x + 5, x + 3
-// min -> x - 1 = -4
-// max -> x + 5 = 5
-// x -> -3
-// x -> 0
-
-// -40
-// x, x - 40
-// min -> x - 40 = -46, x = -6
-// max -> x = 53
-// 53 - (-6)
