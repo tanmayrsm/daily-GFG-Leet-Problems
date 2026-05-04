@@ -29,6 +29,9 @@ class Solution {
             }
         }
 
+        System.out.println(mp + "::" + mp2);
+        System.out.println("adj ::" + adj);
+        
         Queue<Integer> q = new LinkedList<>();  // q has nodes
         for(Integer node : mp2.get(source)) q.offer(node);
         int len = 1;
@@ -36,7 +39,7 @@ class Solution {
             int m = q.size();
             while (m-- > 0) {
                 int node = q.poll();
-                if(mp.get(node).containsKey(target))    return len;
+                if(mp.get(node).contains(target))    return len;
                 for(int child : adj.get(node)) {
                     if(!vis[child])
                         q.offer(child);
